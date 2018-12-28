@@ -5,7 +5,20 @@ import numpy as np
 import re
 import codecs
 
+from keras.preprocessing.text import Tokenizer
+from keras.preprocessing.sequence import pad_sequences
+from keras.utils import to_categorical
+from nltk.tokenize import RegexpTokenizer
+import matplotlib.pyplot as plt
 
+from sklearn.model_selection import train_test_split
+from sklearn.feature_extraction.text import CountVectorizer, TfidfVectorizer
+
+from sklearn.decomposition import PCA, TruncatedSVD
+import matplotlib
+import matplotlib.patches as mpatches
+
+'''
 input_file = codecs.open("socialmedia-disaster-tweets-DFE.csv", "r",encoding='utf-8', errors='replace')
 output_file = open("socialmedia-disaster-tweets-DFE_clean.csv", "w")
 
@@ -20,9 +33,7 @@ questions = pd.read_csv("socialmedia-disaster-tweets-DFE_clean.csv")
 questions = questions.filter(['text','choose_one','class_label'])
 # questions.columns=['text', 'choose_one', 'class_label']
 questions.head()
-
 questions.tail()
-
 questions.describe()
 
 def standardize_text(df, text_field):
@@ -35,25 +46,17 @@ def standardize_text(df, text_field):
     return df
 
 questions = standardize_text(questions, "text")
-
 questions.to_csv("clean_data.csv")
 questions.head()
+'''
 
 clean_questions = pd.read_csv("clean_data.csv")
 clean_questions.tail() 
-
 clean_questions.groupby("class_label").count() 
 
-from nltk.tokenize import RegexpTokenizer
-
 tokenizer = RegexpTokenizer(r'\w+')
-
 clean_questions["tokens"] = clean_questions["text"].apply(tokenizer.tokenize)
 clean_questions.head()
-
-from keras.preprocessing.text import Tokenizer
-from keras.preprocessing.sequence import pad_sequences
-from keras.utils import to_categorical
 
 all_words = [word for tokens in clean_questions["tokens"] for word in tokens]
 sentence_lengths = [len(tokens) for tokens in clean_questions["tokens"]]
@@ -61,36 +64,24 @@ VOCAB = sorted(list(set(all_words)))
 print("%s words total, with a vocabulary size of %s" % (len(all_words), len(VOCAB)))
 print("Max sentence length is %s" % max(sentence_lengths)) 
 
-import matplotlib.pyplot as plt
-
 fig = plt.figure(figsize=(10, 10)) 
 plt.xlabel('Sentence length')
 plt.ylabel('Number of sentences')
 plt.hist(sentence_lengths)
 plt.show() 
 
-from sklearn.model_selection import train_test_split
-from sklearn.feature_extraction.text import CountVectorizer, TfidfVectorizer
-
 def cv(data):
     count_vectorizer = CountVectorizer()
-
     emb = count_vectorizer.fit_transform(data)
-
     return emb, count_vectorizer
 
 list_corpus = clean_questions["text"].tolist()
 list_labels = clean_questions["class_label"].tolist()
 
-X_train, X_test, y_train, y_test = train_test_split(list_corpus, list_labels, test_size=0.2, 
-                                                                                random_state=40)
+X_train, X_test, y_train, y_test = train_test_split(list_corpus, list_labels, test_size=0.2,random_state=40)
 
 X_train_counts, count_vectorizer = cv(X_train)
 X_test_counts = count_vectorizer.transform(X_test)
-
-from sklearn.decomposition import PCA, TruncatedSVD
-import matplotlib
-import matplotlib.patches as mpatches
 
 def plot_LSA(test_data, test_labels, savepath="PCA_demo.csv", plot=True):
         lsa = TruncatedSVD(n_components=2)
